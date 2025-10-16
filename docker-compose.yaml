@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+
+  travel-frontend:
+    build:
+      context: ./travel-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:3000" 
+    environment:
+      - VITE_API_URL=http://localhost:8081
+    networks:
+      - travel-network
+    depends_on:
+      - travel-backend
+    container_name: travel-frontend
+    restart: unless-stopped
+
+  travel-backend:
+    build:
+      context: ./travel-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081" 
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/travelmanagement
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root123
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SERVER_PORT=8081
+      - JWT_SECRET=travel2025secretkey
+    networks:
+      - travel-network
+    depends_on:
+      - mysql
+    container_name: travel-backend
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root123
+      - MYSQL_DATABASE=travelmanagement
+      - MYSQL_USER=travel
+      - MYSQL_PASSWORD=travel123
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - travel-network
+    container_name: travel-mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+networks:
+  travel-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

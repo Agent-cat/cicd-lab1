@@ -1,15 +1,14 @@
-# ---------- Build stage ----------
+
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
 COPY pom.xml .
-# Cache deps to speed up rebuilds
+
 RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests dependency:go-offline
 
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests clean package
 
-# ---------- Run stage ----------
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
